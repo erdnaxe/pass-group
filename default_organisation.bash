@@ -10,8 +10,9 @@
 # For long term use, it would be great to merge some feature to upstream such
 # as recrypt command and groups support.
 
-# Change this variable to use this extension with another organisation
-GROUP_NAME="default_organisation"
+# Find store name based on extension name
+EXTENSION_NAME=$(basename -- "$extension")
+GROUP_NAME="${EXTENSION_NAME%.*}"
 
 # Change prefix to custom store
 PREFIX="${PREFIX}/${GROUP_NAME}"
