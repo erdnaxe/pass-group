@@ -1,0 +1,18 @@
+{
+    "intern": [
+        {
+            "fingerprint": "2D371GD27E2FFC7797E1B1111C79278F3FCDCC02",
+            "user": "this is optionnal, to identify each fingerprints"
+        },
+	{
+            "fingerprint": "AAAA1GD27AAFFC7797E1B1111CAA278F3FCDAA02",
+            "user": "this is optionnal, to identify each fingerprints"
+        }
+    ],
+    "admin": [
+        {
+            "fingerprint": "2D371GD27E2FFC7797E1B1111C79278F3FCDCC02",
+            "user": "this intern is also the admin"
+        }
+    ]
+}
