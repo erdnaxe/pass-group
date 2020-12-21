@@ -34,13 +34,13 @@ cmd_usage() {
 	  $PROGRAM $GROUP_NAME edit [--group=GROUP1,-gGROUP1...] pass-name
 	  					edit (or create) a file using ${EDITOR:-vi}
 	  $PROGRAM $GROUP_NAME generate [--group=GROUP1,-gGROUP1...] [--no-symbols,-n] [--clip,-c] [--in-place,-i | --force,-f] pass-name [pass-length]
-	      					generate a new password of pass-length (or $GENERATED_LENGTH
-	      					if unspecified) with optionally no symbols.
-	      					Prompt before overwriting existing password unless
-	      					forced. Optionally replace only the first line of an
-	      					existing file with a new password.
+	  					generate a new password of pass-length (or $GENERATED_LENGTH
+	  					if unspecified) with optionally no symbols.
+	  					Prompt before overwriting existing password unless
+	  					forced. Optionally replace only the first line of an
+	  					existing file with a new password.
 	  $PROGRAM $GROUP_NAME rm [--recursive,-r] [--force,-f] pass-name
-	      					remove existing password or directory.
+	  					remove existing password or directory.
 	  $PROGRAM $GROUP_NAME recrypt [--group=GROUP1,-gGROUP1...] [paths...]
 	  					recrypt selected files and folder. If set, change group.
 	  $PROGRAM $GROUP_NAME git git-command-args...	execute a git command
@@ -93,14 +93,14 @@ set_gpg_recipients() {
 # Wrapper around pass cmd_edit() to add group option
 cmd_custom_edit() {
 	# Parse --group option
-        local opts target_groups=()
-        opts="$($GETOPT -o g: -l group: -n "$PROGRAM" -- "$@")"
-        local err=$?
-        eval set -- "$opts"
-        while true; do case $1 in
-                -g|--group) target_groups+=("${2:-1}"); shift 2 ;;
-                --) shift; break ;;
-        esac done
+	local opts target_groups=()
+	opts="$($GETOPT -o g: -l group: -n "$PROGRAM" -- "$@")"
+	local err=$?
+	eval set -- "$opts"
+	while true; do case $1 in
+		-g|--group) target_groups+=("${2:-1}"); shift 2 ;;
+		--) shift; break ;;
+	esac done
 	[[ $err -ne 0 ]] && die "Please specify receivers with '--group=GROUP1'."
 
 	cmd_edit "$@"
@@ -109,17 +109,18 @@ cmd_custom_edit() {
 # Wrapper around pass cmd_generate() to add group option
 cmd_custom_generate() {
 	# Parse --group option
-        local opts target_groups=()
-        opts="$($GETOPT -o g: -l group: -n "$PROGRAM" -- "$@")"
-        local err=$?
-        eval set -- "$opts"
-        while true; do case $1 in
-                -g|--group) target_groups+=("${2:-1}"); shift 2 ;;
-                --) shift; break ;;
-        esac done
+	local opts passthrough_opts=() target_groups=()
+	opts="$($GETOPT -o g:nqcif -l group:,no-symbols,qrcode,clip,in-place,force -n "$PROGRAM" -- "$@")"
+	local err=$?
+	eval set -- "$opts"
+	while true; do case $1 in
+		-g|--group) target_groups+=("${2:-1}"); shift 2 ;;
+		--) shift; break ;;
+		*) passthrough_opts+=($1); shift ;;
+	esac done
 	[[ $err -ne 0 || ! -n $target_groups ]] && die "Please specify receivers with '--group=GROUP1'."
 
-	cmd_generate "$@"
+	cmd_generate "${passthrough_opts[@]}" "$@"
 }
 
 # Recrypt selected files and folders
