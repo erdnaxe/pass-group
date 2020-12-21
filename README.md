@@ -37,11 +37,8 @@ git clone git@gitlab.crans.org:nounous/password-store.git ~/.password-store/cran
 ```
 
 If you do not have yet such repository yet, you can create a empty one
-containing:
-
--   **.groups.json**: see example to create one
-    [.groups.json.example](./.groups.json.example)
--   **.last_group.json**: `echo {} > .last_group.json`
+containing **.groups.json**, see example to create one:
+[.groups.json.example](./.groups.json.example).
 
 If you care about receiving notifications each time passwords are created or
 updated, you should subscribe via your web Git management system.

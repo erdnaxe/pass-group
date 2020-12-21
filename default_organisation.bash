@@ -57,7 +57,7 @@ set_gpg_recipients() {
 	local groupsfile="$PREFIX/.groups.json"
 	local lastgroupfile="$PREFIX/.last_group.json"
 	[[ -f $groupsfile ]] || die "$groupsfile was not found, please create one."
-	[[ -f $lastgroupfile ]] || die "$lastgroupfile was not found, please run `echo {} > $lastgroupfile`."
+	[[ -f $lastgroupfile ]] || echo {} > $lastgroupfile
 
 	if [ -n "$target_groups" ]; then
 		# User want to set group
