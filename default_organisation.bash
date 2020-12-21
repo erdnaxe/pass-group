@@ -151,8 +151,8 @@ cmd_recrypt() {
 	for path in $@; do
 		# Get path to file
 		filepath="$PREFIX/$path"
-		if [ -f $path.gpg ]; then
-			filepath="$path.gpg"
+		if [ -f $filepath.gpg ]; then
+			filepath="$filepath.gpg"
 		fi
 
 		reencrypt_path "$filepath"
@@ -160,7 +160,7 @@ cmd_recrypt() {
 	done
 
 	# Commit
-	git_commit "Recrypt $*."
+	git_commit "Recrypt $* for ${target_groups[*]}."
 }
 
 
