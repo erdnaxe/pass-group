@@ -64,7 +64,7 @@ set_gpg_recipients() {
 		yesno "Do you want to encrypt $path for $target_groups?" || die
 
 		# Save groups and add to git
-		cat <<< $(jq ".$path = (\"$target_groups\"|split(\" \"))" $lastgroupfile) > $lastgroupfile
+		cat <<< $(jq ".\"$path\" = (\"$target_groups\"|split(\" \"))" $lastgroupfile) > $lastgroupfile
 		set_git $lastgroupfile
 		git -C "$INNER_GIT_DIR" add "$lastgroupfile"
 	else
