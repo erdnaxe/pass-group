@@ -71,7 +71,7 @@ set_gpg_recipients() {
 		# Get previous groups
 		while read group; do
 			target_groups+=($group)
-		done < <(jq -r "try .$path[]" $lastgroupfile)
+		done < <(jq -r "try .\"$path\"[]" $lastgroupfile)
 	fi
 
 	if [ ! -n "$target_groups" ]; then
@@ -86,8 +86,46 @@ set_gpg_recipients() {
 		while read gpg_id; do
 			GPG_RECIPIENT_ARGS+=( "-r" "$gpg_id" )
 			GPG_RECIPIENTS+=( "$gpg_id" )
-		done < <(jq -r "try .$group[].fingerprint" $groupsfile)
+		done < <(jq -r "try .\"$group\"[].fingerprint" $groupsfile)
 	done
+}
+
+# Wrapper around pass cmd_show() to show groups when listing
+cmd_custom_show() {
+	local path="$1"
+	check_sneaky_paths "$path"
+
+	if [[ -d $PREFIX/$path ]]; then
+		# Custom list with groups
+		if [[ -z $path ]]; then
+			echo "$GROUP_NAME"
+		else
+			echo "${path%\/}"
+		fi
+
+		# last_group contains last groups used to encrypt a file
+		local lastgroupfile="$PREFIX/.last_group.json"
+		[[ -f $lastgroupfile ]] || echo {} > $lastgroupfile
+
+		# tree -f to get full path
+		# tree -P "*.gpg" to get only .gpg files
+		# sed remove .gpg at end of line, but keep colors
+		while read line; do
+			# Split output
+			local file=${line#*$PREFIX/}
+			local treeprefix=${line%$PREFIX*}
+
+			# Get groups
+			local groups=( )
+			while read group; do
+				groups+=( "$group" )
+			done < <(jq -r "try .\"$file\"[]" $lastgroupfile)
+			echo "$treeprefix$file (${groups[@]})"
+		done < <(tree -C -l -f -P "*.gpg" --noreport "$PREFIX/$path" | tail -n +2 | sed -E 's/\.gpg(\x1B\[[0-9]+m)?( ->|$)/\1\2/g')
+	else
+		# Back to pass
+		cmd_show "$@"
+	fi
 }
 
 # Wrapper around pass cmd_edit() to add group option
@@ -169,7 +207,7 @@ COMMAND="$1"
 
 case "$1" in
 	help) shift;			cmd_usage "$@" ;;
-	show|ls|list|view) shift;	cmd_show "$@" ;;
+	show|ls|list|view) shift;	cmd_custom_show "$@" ;;
 	find|search) shift;		cmd_find "$@" ;;
 	grep) shift;			cmd_grep "$@" ;;
 	edit) shift;			cmd_custom_edit "$@" ;;
@@ -177,6 +215,6 @@ case "$1" in
 	delete|rm|remove) shift;	cmd_delete "$@" ;;
 	recrypt) shift;			cmd_recrypt "$@" ;;
 	git) shift;			cmd_git "$@" ;;
-	*)				cmd_show "$@" ;;
+	*)				cmd_custom_show "$@" ;;
 esac
 exit 0
