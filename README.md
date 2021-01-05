@@ -69,3 +69,9 @@ pass crans recrypt --group=nounou --group=cableur test
 # Push new modification
 pass crans git push
 ```
+
+## Update
+
+The extension can be auto-updated. You may use `pass crans update` to
+check if an update is available, then if you accept the update the extension
+will be replaced.
