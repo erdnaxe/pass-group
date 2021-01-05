@@ -69,9 +69,3 @@ pass crans recrypt --group=nounou --group=cableur test
 # Push new modification
 pass crans git push
 ```
-
-### dmenu integration
-
-`passmenu` tool integrates `pass` with `dmenu` making easy to search
-and select passwords.
-
