@@ -90,10 +90,7 @@ set_gpg_recipients() {
 			if ! [[ $? -eq 0 ]]; then
 				echo ""
 				echo "Fingerprint \"$gpg_id\" was not found. Maybe it is not imported."
-				read -r -p "Do you want to import it? [y/N] " input < /dev/tty
-				case $input in
-					[y/Y]) gpg --recv-keys "$gpg_id" || exit 1 ;;
-				esac
+				yesno "Do you want to import it?" < /dev/tty && $GPG --recv-keys "$gpg_id" || exit 1
 			fi
 
 			while read sub; do
@@ -103,13 +100,9 @@ set_gpg_recipients() {
 			done < <($GPG --list-key --with-colons "$gpg_id" | grep -E "^sub|^pub")
 			if [[ $can_encrypt -eq 0 ]] ; then
 				echo ""
-				gpg --list-key "$gpg_id"
+				$GPG --list-key "$gpg_id"
 				echo "GPG can not encrypt for \"$gpg_id\". Did you import and trust it?"
-				read -p "Do you want to ignore this fingerprint? [y/N] " input < /dev/tty
-				case $input in
-					[y/Y])	gpg --recv-keys "$gpg_id" ;;
-					*)	die "Exiting." ;;
-				esac
+				yesno "Do you want to ignore this fingerprint?" < /dev/tty || die "Exiting."
 			else
 				GPG_RECIPIENT_ARGS+=( "-r" "$gpg_id" )
 				GPG_RECIPIENTS+=( "$gpg_id" )
