@@ -44,6 +44,7 @@ cmd_usage() {
 	  $PROGRAM $GROUP_NAME recrypt [--group=GROUP1,-gGROUP1...] [paths...]
 	  					recrypt selected files and folder. If set, change group.
 	  $PROGRAM $GROUP_NAME git git-command-args...	execute a git command
+	  $PROGRAM $GROUP_NAME update			check for an extension update and download it
 	  $PROGRAM $GROUP_NAME help			show this text
 
 	_EOF
@@ -212,6 +213,15 @@ cmd_recrypt() {
 	git_commit "Recrypt $* for ${target_groups[*]}."
 }
 
+# Check for an extension update
+cmd_update() {
+	echo "Looking for update..."
+	local tmp_file="$(mktemp).bash"
+	curl https://raw.githubusercontent.com/erdnaxe/pass-group/master/default_organisation.bash -o $tmp_file
+	diff --color $extension $tmp_file && rm $tmp_file && echo "Already up to date." && exit 0
+	yesno "New update found, do you want to update the extension?" && echo "Updating extension..." && mv $tmp_file $extension && echo "Extension successfully updated" && exit 0 || rm $tmp_file && die "Update cancelled."
+}
+
 
 COMMAND="$1"
 
@@ -225,6 +235,7 @@ case "$1" in
 	delete|rm|remove) shift;	cmd_delete "$@" ;;
 	recrypt) shift;			cmd_recrypt "$@" ;;
 	git) shift;			cmd_git "$@" ;;
+	update) shift;			cmd_update "$@" ;;
 	*)				cmd_custom_show "$@" ;;
 esac
 exit 0
