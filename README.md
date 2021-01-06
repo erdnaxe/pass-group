@@ -19,6 +19,7 @@ enable the user to choose which group to encrypt for when editing a file.
 
 Firstly, make sure that you have a working computer with `pass` installed on
 it. It is packaged in many major Linux distributions.
+You also need to have `jq` installed.
 
 Then you can download and rename
 [default_organisation.bash](./default_organisation.bash)
