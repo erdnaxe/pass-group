@@ -216,20 +216,10 @@ cmd_recrypt() {
 # Check for an extension update
 cmd_update() {
 	echo "Looking for update..."
-	tmp_file="/tmp/pass-group-$EXTENSION_NAME.bash"
-	curl -s https://raw.githubusercontent.com/erdnaxe/pass-group/master/default_organisation.bash > $tmp_file
+	local tmp_file="$(mktemp).bash"
+	curl https://raw.githubusercontent.com/erdnaxe/pass-group/master/default_organisation.bash -o $tmp_file
 	diff --color $extension $tmp_file && rm $tmp_file && echo "Already up to date." && exit 0
-	read -r -p "New update found, do you really want to update the extension? [y/N]" input
-	case $input in
-		[yY])
-			echo "Updating extension..."
-			mv $tmp_file $extension && echo "Extension successfully updated" && exit 0
-			break ;;
-		*)
-			echo "Update cancelled."
-			rm $tmp_file
-			exit 1 ;;
-	esac
+	yesno "New update found, do you want to update the extension?" && echo "Updating extension..." && mv $tmp_file $extension && echo "Extension successfully updated" && exit 0 || rm $tmp_file && die "Update cancelled."
 }
 
 
