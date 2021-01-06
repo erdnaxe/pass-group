@@ -86,16 +86,34 @@ set_gpg_recipients() {
 		while read gpg_id; do
 			# Check that gpg know recipient and policy allow to encrypt for them
 			local can_encrypt=0
+			$GPG --list-key "$gpg_id" > /dev/null
+			if ! [[ $? -eq 0 ]]; then
+				echo ""
+				echo "Fingerprint \"$gpg_id\" was not found. Maybe it is not imported."
+				read -r -p "Do you want to import it? [y/N] " input < /dev/tty
+				case $input in
+					[y/Y]) gpg --recv-keys "$gpg_id" || exit 1 ;;
+				esac
+			fi
+
 			while read sub; do
 				local trust_level=$(echo $sub | cut -d ":" -f 2)
 				local capabilities=$(echo $sub | cut -d ":" -f 12)
 				[[ $trust_level =~ [mfu] ]] && [[ $capabilities =~ "e" ]] && can_encrypt=1
 			done < <($GPG --list-key --with-colons "$gpg_id" | grep -E "^sub|^pub")
-			[[ $can_encrypt -eq 0 ]] && gpg --list-key "$gpg_id"
-			[[ $can_encrypt -eq 0 ]] && die "GPG can not encrypt for \"$gpg_id\". Did you import and trust it?"
-
-			GPG_RECIPIENT_ARGS+=( "-r" "$gpg_id" )
-			GPG_RECIPIENTS+=( "$gpg_id" )
+			if [[ $can_encrypt -eq 0 ]] ; then
+				echo ""
+				gpg --list-key "$gpg_id"
+				echo "GPG can not encrypt for \"$gpg_id\". Did you import and trust it?"
+				read -p "Do you want to ignore this fingerprint? [y/N] " input < /dev/tty
+				case $input in
+					[y/Y])	gpg --recv-keys "$gpg_id" ;;
+					*)	die "Exiting." ;;
+				esac
+			else
+				GPG_RECIPIENT_ARGS+=( "-r" "$gpg_id" )
+				GPG_RECIPIENTS+=( "$gpg_id" )
+			fi
 		done < <(jq -r "try .\"$group\"[].fingerprint" $groupsfile)
 	done
 }
