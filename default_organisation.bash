@@ -8,7 +8,7 @@
 #
 # The idea is to overwrite functions from pass to make it encrypt for groups
 # For long term use, it would be great to merge some feature to upstream such
-# as recrypt command and groups support.
+# as reencrypt command and groups support.
 
 # Find store name based on extension name
 EXTENSION_NAME=$(basename -- "$extension")
@@ -42,8 +42,8 @@ cmd_usage() {
 	  				line of an existing file with a new password.
 	  $PROGRAM $GROUP_NAME rm [--recursive,-r] [--force,-f] pass-name
 	  				remove existing password or directory.
-	  $PROGRAM $GROUP_NAME recrypt [--group=GROUP1,-gGROUP1...] [paths...]
-	  				recrypt selected files and folder. If set,
+	  $PROGRAM $GROUP_NAME reencrypt [--group=GROUP1,-gGROUP1...] [paths...]
+	  				reencrypt selected files and folder. If set,
 	  				change group.
 	  $PROGRAM $GROUP_NAME git git-args...	execute a git command
 	  $PROGRAM $GROUP_NAME update		check new extension update
@@ -185,8 +185,8 @@ cmd_custom_generate() {
 	cmd_generate "${passthrough_opts[@]}" "$@"
 }
 
-# Recrypt selected files and folders
-cmd_recrypt() {
+# Reencrypt selected files and folders
+cmd_reencrypt() {
 	# Parse --group option
 	local opts target_groups=()
 	opts="$($GETOPT -o g: -l group: -n "$PROGRAM" -- "$@")"
@@ -197,9 +197,9 @@ cmd_recrypt() {
 		--) shift; break ;;
 	esac done
 
-	[[ $err -ne 0 ]] && die "Usage: $PROGRAM $GROUP_NAME recrypt [--group=GROUP1,-gGROUP1...] [paths...]"
+	[[ $err -ne 0 ]] && die "Usage: $PROGRAM $GROUP_NAME reencrypt [--group=GROUP1,-gGROUP1...] [paths...]"
 	[[ $# -lt 1 ]] && die "If you really want to reencrypt the whole store, please add '.' as the path."
-	[[ -n "$target_groups" ]] && yesno "Are you sure you want to recrypt $* for ${target_groups[*]}?"
+	[[ -n "$target_groups" ]] && yesno "Are you sure you want to reencrypt $* for ${target_groups[*]}?"
 
 	# Sneaky sneaky user, I see you :p
 	check_sneaky_paths "$@"
@@ -209,7 +209,7 @@ cmd_recrypt() {
 		[[ -e $PREFIX/$path ]] || [[ -e $PREFIX/$path.gpg ]] || die "Error: $path is not in the password store."
 	done
 
-	# Recrypt all paths
+	# Reencrypt all paths
 	set_git "$PREFIX/"
 	for path in $@; do
 		# Get path to file
@@ -223,7 +223,7 @@ cmd_recrypt() {
 	done
 
 	# Commit
-	git_commit "Recrypt $* for ${target_groups[*]}."
+	git_commit "Reencrypt $* for ${target_groups[*]}."
 }
 
 # Check for an extension update
@@ -246,7 +246,7 @@ case "$1" in
 	edit) shift;			cmd_custom_edit "$@" ;;
 	generate) shift;		cmd_custom_generate "$@" ;;
 	delete|rm|remove) shift;	cmd_delete "$@" ;;
-	recrypt) shift;			cmd_recrypt "$@" ;;
+	reencrypt) shift;		cmd_reencrypt "$@" ;;
 	git) shift;			cmd_git "$@" ;;
 	update) shift;			cmd_update "$@" ;;
 	*)				cmd_custom_show "$@" ;;
