@@ -24,28 +24,30 @@ cmd_usage() {
 	$PROGRAM $GROUP_NAME - Group passwords manager.
 
 	Usage:
-	  $PROGRAM $GROUP_NAME [ls] [subfolder]		list files, show if unique
+	  $PROGRAM $GROUP_NAME [ls] [subfolder]	list files, show if unique
 	  $PROGRAM $GROUP_NAME [show] [--clip[=line-number],-c[line-number]] pass-name
-	  					show existing password and optionally put it on the
-	  					clipboard for $CLIP_TIME seconds
-	  $PROGRAM $GROUP_NAME find pass-names... 	list files that match pass-names
+	  				show existing password and optionally put it on
+	  				the clipboard for $CLIP_TIME seconds
+	  $PROGRAM $GROUP_NAME find pass-names...	list files that match pass-names
 	  $PROGRAM $GROUP_NAME grep [GREPOPTIONS] search-string
-	  					search for files containing search-string
+	  				search for files containing search-string
 	  $PROGRAM $GROUP_NAME edit [--group=GROUP1,-gGROUP1...] pass-name
-	  					edit (or create) a file using ${EDITOR:-vi}
-	  $PROGRAM $GROUP_NAME generate [--group=GROUP1,-gGROUP1...] [--no-symbols,-n] [--clip,-c] [--in-place,-i | --force,-f] pass-name [pass-length]
-	  					generate a new password of pass-length (or $GENERATED_LENGTH
-	  					if unspecified) with optionally no symbols.
-	  					Prompt before overwriting existing password unless
-	  					forced. Optionally replace only the first line of an
-	  					existing file with a new password.
+	  				edit (or create) a file using ${EDITOR:-vi}
+	  $PROGRAM $GROUP_NAME generate [--group=GROUP1,-gGROUP1...] [--no-symbols,-n]
+	  	[--clip,-c] [--in-place,-i | --force,-f] pass-name [pass-length]
+	  				generate a new password of pass-length (or $GENERATED_LENGTH
+	  				if unspecified) with optionally no symbols.
+	  				Prompt before overwriting existing password
+	  				unless forced. Optionally replace only the first
+	  				line of an existing file with a new password.
 	  $PROGRAM $GROUP_NAME rm [--recursive,-r] [--force,-f] pass-name
-	  					remove existing password or directory.
+	  				remove existing password or directory.
 	  $PROGRAM $GROUP_NAME recrypt [--group=GROUP1,-gGROUP1...] [paths...]
-	  					recrypt selected files and folder. If set, change group.
-	  $PROGRAM $GROUP_NAME git git-command-args...	execute a git command
-	  $PROGRAM $GROUP_NAME update			check for an extension update and download it
-	  $PROGRAM $GROUP_NAME help			show this text
+	  				recrypt selected files and folder. If set,
+	  				change group.
+	  $PROGRAM $GROUP_NAME git git-args...	execute a git command
+	  $PROGRAM $GROUP_NAME update		check new extension update
+	  $PROGRAM $GROUP_NAME help		show this text
 
 	_EOF
 }
@@ -237,7 +239,7 @@ cmd_update() {
 COMMAND="$1"
 
 case "$1" in
-	help) shift;			cmd_usage "$@" ;;
+	help|-h|--help) shift;		cmd_usage "$@" ;;
 	show|ls|list|view) shift;	cmd_custom_show "$@" ;;
 	find|search) shift;		cmd_find "$@" ;;
 	grep) shift;			cmd_grep "$@" ;;
