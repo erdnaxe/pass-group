@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Copyright (C) 2020 Cr@ns <roots@crans.org>
 # Authors : Alexandre Iooss <erdnaxe@crans.org>
+#           Yohann D'anello <ynerant@crans.org>
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
 # This pass extension add group management support for password sharing in small organisations.
