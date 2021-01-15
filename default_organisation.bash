@@ -79,7 +79,7 @@ set_gpg_recipients() {
 		git -C "$INNER_GIT_DIR" add "$lastgroupfile"
 	else
 		# Get previous groups
-		while read group; do
+		while read -r group; do
 			target_groups+=("$group")
 		done < <(jq -r "try .\"$path\"[]" "$lastgroupfile")
 	fi
@@ -93,7 +93,7 @@ set_gpg_recipients() {
 	GPG_RECIPIENT_ARGS=( )
 	GPG_RECIPIENTS=( )
 	for group in $target_groups; do
-		while read gpg_id; do
+		while read -r gpg_id; do
 			# Check that gpg know recipient and policy allow to encrypt for them
 			local can_encrypt=0
 			$GPG --list-key "$gpg_id" > /dev/null
@@ -103,7 +103,7 @@ set_gpg_recipients() {
 				yesno "Do you want to import it?" < /dev/tty && $GPG --recv-keys "$gpg_id" || exit 1
 			fi
 
-			while read sub; do
+			while read -r sub; do
 				local trust_level capabilities
 				trust_level=$(echo "$sub" | cut -d ":" -f 2)
 				capabilities=$(echo "$sub" | cut -d ":" -f 12)
@@ -142,14 +142,14 @@ cmd_custom_show() {
 		# tree -f to get full path
 		# tree -P "*.gpg" to get only .gpg files
 		# sed remove .gpg at end of line, but keep colors
-		while read line; do
+		while read -r line; do
 			# Split output
 			local file=${line#*$PREFIX/}
 			local treeprefix=${line%$PREFIX*}
 
 			# Get groups
 			local groups=( )
-			while read group; do
+			while read -r group; do
 				groups+=( "$group" )
 			done < <(jq -r "try .\"$file\"[]" "$lastgroupfile")
 			echo "$treeprefix$file (${groups[@]})"
