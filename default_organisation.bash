@@ -10,7 +10,11 @@
 # For long term use, it would be great to merge some feature to upstream such
 # as reencrypt command and groups support.
 
+# URL to fetch when looking for an update
+UPDATE_URL="https://raw.githubusercontent.com/erdnaxe/pass-group/master/default_organisation.bash"
+
 # Find store name based on extension name
+# $extension is defined by pass before sourcing this file
 EXTENSION_NAME=$(basename -- "$extension")
 GROUP_NAME="${EXTENSION_NAME%.*}"
 
@@ -60,24 +64,24 @@ set_gpg_recipients() {
 	local groupsfile="$PREFIX/.groups.json"
 	local lastgroupfile="$PREFIX/.last_group.json"
 	[[ -f $groupsfile ]] || die "$groupsfile was not found, please create one."
-	[[ -f $lastgroupfile ]] || echo {} > $lastgroupfile
+	[[ -f $lastgroupfile ]] || echo {} > "$lastgroupfile"
 
 	if [ -n "$target_groups" ]; then
 		# User want to set group
 		yesno "Do you want to encrypt $path for $target_groups?" || die
 
 		# Save groups and add to git
-		cat <<< $(jq ".\"$path\" = (\"$target_groups\"|split(\" \"))" $lastgroupfile) > $lastgroupfile
+		cat <<< $(jq ".\"$path\" = (\"$target_groups\"|split(\" \"))" "$lastgroupfile") > "$lastgroupfile"
 		set_git $lastgroupfile
 		git -C "$INNER_GIT_DIR" add "$lastgroupfile"
 	else
 		# Get previous groups
 		while read group; do
-			target_groups+=($group)
-		done < <(jq -r "try .\"$path\"[]" $lastgroupfile)
+			target_groups+=("$group")
+		done < <(jq -r "try .\"$path\"[]" "$lastgroupfile")
 	fi
 
-	if [ ! -n "$target_groups" ]; then
+	if [ -z "$target_groups" ]; then
 		# We have no fingerprint to encrypt for
 		die "No groups were provided for $path, please define receivers with '--group=GROUP1'."
 	fi
@@ -97,8 +101,9 @@ set_gpg_recipients() {
 			fi
 
 			while read sub; do
-				local trust_level=$(echo $sub | cut -d ":" -f 2)
-				local capabilities=$(echo $sub | cut -d ":" -f 12)
+				local trust_level capabilities
+				trust_level=$(echo "$sub" | cut -d ":" -f 2)
+				capabilities=$(echo "$sub" | cut -d ":" -f 12)
 				[[ $trust_level =~ [mfu] ]] && [[ $capabilities =~ "e" ]] && can_encrypt=1
 			done < <($GPG --list-key --with-colons "$gpg_id" | grep -E "^sub|^pub")
 			if [[ $can_encrypt -eq 0 ]] ; then
@@ -110,7 +115,7 @@ set_gpg_recipients() {
 				GPG_RECIPIENT_ARGS+=( "-r" "$gpg_id" )
 				GPG_RECIPIENTS+=( "$gpg_id" )
 			fi
-		done < <(jq -r "try .\"$group\"[].fingerprint" $groupsfile)
+		done < <(jq -r "try .\"$group\"[].fingerprint" "$groupsfile")
 	done
 }
 
@@ -129,7 +134,7 @@ cmd_custom_show() {
 
 		# last_group contains last groups used to encrypt a file
 		local lastgroupfile="$PREFIX/.last_group.json"
-		[[ -f $lastgroupfile ]] || echo {} > $lastgroupfile
+		[[ -f $lastgroupfile ]] || echo {} > "$lastgroupfile"
 
 		# tree -f to get full path
 		# tree -P "*.gpg" to get only .gpg files
@@ -143,7 +148,7 @@ cmd_custom_show() {
 			local groups=( )
 			while read group; do
 				groups+=( "$group" )
-			done < <(jq -r "try .\"$file\"[]" $lastgroupfile)
+			done < <(jq -r "try .\"$file\"[]" "$lastgroupfile")
 			echo "$treeprefix$file (${groups[@]})"
 		done < <(tree -C -l -f -P "*.gpg" --noreport "$PREFIX/$path" | tail -n +2 | sed -E 's/\.gpg(\x1B\[[0-9]+m)?( ->|$)/\1\2/g')
 	else
@@ -155,8 +160,9 @@ cmd_custom_show() {
 # Wrapper around pass cmd_edit() to add group option
 cmd_custom_edit() {
 	# Parse --group option
-	local opts target_groups=()
+	local opts target_groups
 	opts="$($GETOPT -o g: -l group: -n "$PROGRAM" -- "$@")"
+	target_groups=()
 	local err=$?
 	eval set -- "$opts"
 	while true; do case $1 in
@@ -180,7 +186,7 @@ cmd_custom_generate() {
 		--) shift; break ;;
 		*) passthrough_opts+=($1); shift ;;
 	esac done
-	[[ $err -ne 0 || ! -n $target_groups ]] && die "Please specify receivers with '--group=GROUP1'."
+	[[ $err -ne 0 || -z $target_groups ]] && die "Please specify receivers with '--group=GROUP1'."
 
 	cmd_generate "${passthrough_opts[@]}" "$@"
 }
@@ -214,7 +220,7 @@ cmd_reencrypt() {
 	for path in $@; do
 		# Get path to file
 		filepath="$PREFIX/$path"
-		if [ -f $filepath.gpg ]; then
+		if [ -f "$filepath.gpg" ]; then
 			filepath="$filepath.gpg"
 		fi
 
@@ -229,10 +235,11 @@ cmd_reencrypt() {
 # Check for an extension update
 cmd_update() {
 	echo "Looking for update..."
-	local tmp_file="$(mktemp).bash"
-	curl https://raw.githubusercontent.com/erdnaxe/pass-group/master/default_organisation.bash -o $tmp_file
-	diff --color $extension $tmp_file && rm $tmp_file && echo "Already up to date." && exit 0
-	yesno "New update found, do you want to update the extension?" && echo "Updating extension..." && mv $tmp_file $extension && echo "Extension successfully updated" && exit 0 || rm $tmp_file && die "Update cancelled."
+	local tmp_file
+	tmp_file="$(mktemp).bash"
+	curl "$UPDATE_URL" -o "$tmp_file"
+	diff --color "$extension" "$tmp_file" && rm "$tmp_file" && echo "Already up to date." && exit 0
+	yesno "New update found, do you want to update the extension?" && echo "Updating extension..." && mv "$tmp_file" "$extension" && echo "Extension successfully updated" && exit 0 || rm "$tmp_file" && die "Update cancelled."
 }
 
 
