@@ -72,7 +72,7 @@ set_gpg_recipients() {
 
 		# Save groups and add to git
 		cat <<< $(jq ".\"$path\" = (\"$target_groups\"|split(\" \"))" "$lastgroupfile") > "$lastgroupfile"
-		set_git $lastgroupfile
+		set_git "$lastgroupfile"
 		git -C "$INNER_GIT_DIR" add "$lastgroupfile"
 	else
 		# Get previous groups
@@ -203,7 +203,7 @@ cmd_reencrypt() {
 		--) shift; break ;;
 	esac done
 
-	[[ $err -ne 0 ]] && die "Usage: $PROGRAM $GROUP_NAME reencrypt [--group=GROUP1,-gGROUP1...] [paths...]"
+	[[ $err -ne 0 ]] && die "Usage: $PROGRAM $COMMAND [--group=GROUP1,-gGROUP1...] [paths...]"
 	[[ $# -lt 1 ]] && die "If you really want to reencrypt the whole store, please add '.' as the path."
 	[[ -n "$target_groups" ]] && yesno "Are you sure you want to reencrypt $* for ${target_groups[*]}?"
 
@@ -243,7 +243,8 @@ cmd_update() {
 }
 
 
-COMMAND="$1"
+# Used when printing usage
+COMMAND="$GROUP_NAME $1"
 
 case "$1" in
 	help|-h|--help) shift;		cmd_usage "$@" ;;
