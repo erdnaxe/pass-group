@@ -84,24 +84,17 @@ set_gpg_recipients() {
 		done < <(jq -r "try .\"$path\"[]" "$lastgroupfile")
 	fi
 
-	if [ -z "$target_groups" ]; then
-		# We have no fingerprint to encrypt for
-		die "No groups were provided for $path, please define receivers with '--group=GROUP1'."
-	fi
+	# Stop if we have no fingerprint to encrypt for
+	[[ ${target_groups[*]} ]] || die "No groups were provided for $path, please define receivers with '--group=GROUP1'."
 
 	# We have groups, fetch fingerprints to PASSWORD_STORE_KEY
 	GPG_RECIPIENT_ARGS=( )
 	GPG_RECIPIENTS=( )
-	for group in $target_groups; do
+	for group in "${target_groups[@]}"; do
 		while read -r gpg_id; do
 			# Check that gpg know recipient and policy allow to encrypt for them
 			local can_encrypt=0
-			$GPG --list-key "$gpg_id" > /dev/null
-			if ! [[ $? -eq 0 ]]; then
-				echo ""
-				echo "Fingerprint \"$gpg_id\" was not found. Maybe it is not imported."
-				yesno "Do you want to import it?" < /dev/tty && $GPG --recv-keys "$gpg_id" || exit 1
-			fi
+			$GPG --list-key "$gpg_id" > /dev/null || yesno "\nFingerprint \"$gpg_id\" was not found. Maybe it is not imported.\nDo you want to import it?" < /dev/tty && $GPG --recv-keys "$gpg_id" || exit 1
 
 			while read -r sub; do
 				local trust_level capabilities
@@ -152,7 +145,7 @@ cmd_custom_show() {
 			while read -r group; do
 				groups+=( "$group" )
 			done < <(jq -r "try .\"$file\"[]" "$lastgroupfile")
-			echo "$treeprefix$file (${groups[@]})"
+			echo "$treeprefix$file (${groups[*]})"
 		done < <(tree -C -l -f -P "*.gpg" --noreport "$PREFIX/$path" | tail -n +2 | sed -E 's/\.gpg(\x1B\[[0-9]+m)?( ->|$)/\1\2/g')
 	else
 		# Back to pass
@@ -187,9 +180,9 @@ cmd_custom_generate() {
 	while true; do case $1 in
 		-g|--group) target_groups+=("${2:-1}"); shift 2 ;;
 		--) shift; break ;;
-		*) passthrough_opts+=($1); shift ;;
+		*) passthrough_opts+=("$1"); shift ;;
 	esac done
-	[[ $err -ne 0 || -z $target_groups ]] && die "Please specify receivers with '--group=GROUP1'."
+	[[ $err -ne 0 || ! ${target_groups[*]} ]] && die "Please specify receivers with '--group=GROUP1'."
 
 	cmd_generate "${passthrough_opts[@]}" "$@"
 }
@@ -208,19 +201,19 @@ cmd_reencrypt() {
 
 	[[ $err -ne 0 ]] && die "Usage: $PROGRAM $COMMAND [--group=GROUP1,-gGROUP1...] [paths...]"
 	[[ $# -lt 1 ]] && die "If you really want to reencrypt the whole store, please add '.' as the path."
-	[[ -n "$target_groups" ]] && yesno "Are you sure you want to reencrypt $* for ${target_groups[*]}?"
+	[[ "${target_groups[*]}" ]] && yesno "Are you sure you want to reencrypt $* for ${target_groups[*]}?"
 
 	# Sneaky sneaky user, I see you :p
 	check_sneaky_paths "$@"
 
 	# Check paths exist
-	for path in $@; do
+	for path in "$@"; do
 		[[ -e $PREFIX/$path ]] || [[ -e $PREFIX/$path.gpg ]] || die "Error: $path is not in the password store."
 	done
 
 	# Reencrypt all paths
 	set_git "$PREFIX/"
-	for path in $@; do
+	for path in "$@"; do
 		# Get path to file
 		filepath="$PREFIX/$path"
 		if [ -f "$filepath.gpg" ]; then
