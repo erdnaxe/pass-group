@@ -67,18 +67,19 @@ set_gpg_recipients() {
 	[[ -f $groupsfile ]] || die "$groupsfile was not found, please create one."
 	[[ -f $lastgroupfile ]] || echo {} > "$lastgroupfile"
 
-	if [ -n "$target_groups" ]; then
+	if [[ "${target_groups[*]}" ]]; then
 		# User want to set group
-		yesno "Do you want to encrypt $path for $target_groups?" || die
+		yesno "Do you want to encrypt $path for ${target_groups[*]}?" < /dev/tty || die
 
 		# Save groups and add to git
 		local tmp_file
 		tmp_file="$(mktemp).json"
-		cat <<< $(jq ".\"$path\" = (\"$target_groups\"|split(\" \"))" "$lastgroupfile") > "$tmp_file" && mv "$tmp_file" "$lastgroupfile"
+		cat <<< $(jq ".\"$path\" = (\"${target_groups[*]}\"|split(\" \"))" "$lastgroupfile") > "$tmp_file" && mv "$tmp_file" "$lastgroupfile"
 		set_git "$lastgroupfile"
 		git -C "$INNER_GIT_DIR" add "$lastgroupfile"
 	else
 		# Get previous groups
+		local target_groups
 		while read -r group; do
 			target_groups+=("$group")
 		done < <(jq -r "try .\"$path\"[]" "$lastgroupfile")
@@ -156,7 +157,7 @@ cmd_custom_show() {
 # Wrapper around pass cmd_edit() to add group option
 cmd_custom_edit() {
 	# Parse --group option
-	local opts target_groups
+	local opts
 	opts="$($GETOPT -o g: -l group: -n "$PROGRAM" -- "$@")"
 	target_groups=()
 	local err=$?
@@ -173,8 +174,9 @@ cmd_custom_edit() {
 # Wrapper around pass cmd_generate() to add group option
 cmd_custom_generate() {
 	# Parse --group option
-	local opts passthrough_opts=() target_groups=()
+	local opts passthrough_opts=()
 	opts="$($GETOPT -o g:nqcif -l group:,no-symbols,qrcode,clip,in-place,force -n "$PROGRAM" -- "$@")"
+	target_groups=()
 	local err=$?
 	eval set -- "$opts"
 	while true; do case $1 in
@@ -190,8 +192,9 @@ cmd_custom_generate() {
 # Reencrypt selected files and folders
 cmd_reencrypt() {
 	# Parse --group option
-	local opts target_groups=()
+	local opts
 	opts="$($GETOPT -o g: -l group: -n "$PROGRAM" -- "$@")"
+	target_groups=()
 	local err=$?
 	eval set -- "$opts"
 	while true; do case $1 in
@@ -200,8 +203,7 @@ cmd_reencrypt() {
 	esac done
 
 	[[ $err -ne 0 ]] && die "Usage: $PROGRAM $COMMAND [--group=GROUP1,-gGROUP1...] [paths...]"
-	[[ $# -lt 1 ]] && die "If you really want to reencrypt the whole store, please add '.' as the path."
-	[[ "${target_groups[*]}" ]] && yesno "Are you sure you want to reencrypt $* for ${target_groups[*]}?"
+	[[ $# -lt 1 ]] && die "No file specified. If you really want to reencrypt the whole store, please add '.' as the path."
 
 	# Sneaky sneaky user, I see you :p
 	check_sneaky_paths "$@"
@@ -225,7 +227,7 @@ cmd_reencrypt() {
 	done
 
 	# Commit
-	git_commit "Reencrypt $* for ${target_groups[*]}."
+	[[ "${target_groups[*]}" ]] && git_commit "Reencrypt $* for ${target_groups[*]}." || git_commit "Reencrypt $*."
 }
 
 # Check for an extension update
