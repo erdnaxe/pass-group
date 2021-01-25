@@ -94,7 +94,7 @@ set_gpg_recipients() {
 		while read -r gpg_id; do
 			# Check that gpg know recipient and policy allow to encrypt for them
 			local can_encrypt=0
-			$GPG --list-key "$gpg_id" > /dev/null || yesno "\nFingerprint \"$gpg_id\" was not found. Maybe it is not imported.\nDo you want to import it?" < /dev/tty && $GPG --recv-keys "$gpg_id" || exit 1
+			$GPG --list-key "$gpg_id" > /dev/null || (yesno "\nFingerprint \"$gpg_id\" was not found. Maybe it is not imported.\nDo you want to import it?" < /dev/tty && $GPG --recv-keys "$gpg_id" || exit 1)
 
 			while read -r sub; do
 				local trust_level capabilities
@@ -105,7 +105,7 @@ set_gpg_recipients() {
 			if [[ $can_encrypt -eq 0 ]] ; then
 				echo ""
 				$GPG --list-key "$gpg_id"
-				echo "GPG can not encrypt for \"$gpg_id\". Did you import and trust it?"
+				echo "GPG can not encrypt for \"$gpg_id\". Did you trust it?"
 				yesno "Do you want to ignore this fingerprint?" < /dev/tty || die "Exiting."
 			else
 				GPG_RECIPIENT_ARGS+=( "-r" "$gpg_id" )
