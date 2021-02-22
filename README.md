@@ -61,11 +61,11 @@ pass crans git pull
 # To create a new random password named `test` of length 32
 pass crans generate --group=nounou test 32
 
-# To recrypt a file keeping the same groups
-pass crans recrypt test
+# To reencrypt a file keeping the same groups
+pass crans reencrypt test
 
 # To change group
-pass crans recrypt --group=nounou --group=cableur test
+pass crans reencrypt --group=nounou --group=cableur test
 
 # Push new modification
 pass crans git push
