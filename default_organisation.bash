@@ -237,7 +237,7 @@ cmd_update() {
 	tmp_file="$(mktemp).bash"
 	curl "$UPDATE_URL" -o "$tmp_file"
 	diff --color "$extension" "$tmp_file" && rm "$tmp_file" && echo "Already up to date." && exit 0
-	yesno "New update found, do you want to update the extension?" && echo "Updating extension..." && mv "$tmp_file" "$extension" && echo "Extension successfully updated" && exit 0 || rm "$tmp_file" && die "Update cancelled."
+	yesno "New update found, do you want to update the extension?" && echo "Updating extension..." && mv "$tmp_file" "$extension" && chmod +x "$extension" && echo "Extension successfully updated" && exit 0 || rm "$tmp_file" && die "Update cancelled."
 }
 
 
