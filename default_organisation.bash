@@ -95,7 +95,7 @@ set_gpg_recipients() {
 	GPG_RECIPIENTS=( )
 	for group in "${target_groups[@]}"; do
 		while read -r username; do
-      gpg_id=$(jq -r "try .\"$username\"" "$peoplefile")
+			gpg_id=$(jq -r "try .\"$username\"" "$peoplefile")
 			# Check that gpg know recipient and policy allow to encrypt for them
 			local can_encrypt=0
 			$GPG --list-key "$gpg_id" > /dev/null || (yesno "Fingerprint \"$gpg_id\" for $username was not found. Maybe it is not imported. Do you want to import it?" < /dev/tty && $GPG --recv-keys "$gpg_id" || exit 1)
@@ -116,7 +116,7 @@ set_gpg_recipients() {
 				GPG_RECIPIENTS+=( "$gpg_id" )
 			fi
 		done < <(jq -r "try .\"$group\"[]" "$groupsfile")
-  done
+	done
 }
 
 # Wrapper around pass cmd_show() to show groups when listing
