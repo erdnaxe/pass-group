@@ -98,7 +98,7 @@ set_gpg_recipients() {
       gpg_id=$(jq -r "try .\"$username\"" "$peoplefile")
 			# Check that gpg know recipient and policy allow to encrypt for them
 			local can_encrypt=0
-			$GPG --list-key "$gpg_id" > /dev/null || (yesno "\nFingerprint \"$gpg_id\" for $username was not found. Maybe it is not imported.\nDo you want to import it?" < /dev/tty && $GPG --recv-keys "$gpg_id" || exit 1)
+			$GPG --list-key "$gpg_id" > /dev/null || (yesno "Fingerprint \"$gpg_id\" for $username was not found. Maybe it is not imported. Do you want to import it?" < /dev/tty && $GPG --recv-keys "$gpg_id" || exit 1)
 
 			while read -r sub; do
 				local trust_level capabilities
